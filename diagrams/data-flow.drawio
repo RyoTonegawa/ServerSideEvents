@@ -1,0 +1,55 @@
+<mxfile host="65bd71144e">
+    <diagram id="data-flow" name="Data Flow">
+        <mxGraphModel dx="424" dy="426" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="client" value="Client (Lambda / API)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="160" width="180" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="backend" value="Backend (NestJS EventsService)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="260" y="160" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="events" value="events" style="shape=table;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;startSize=50;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="50" width="230" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="&lt;br style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); text-wrap-mode: wrap;&quot;&gt;&lt;span style=&quot;color: rgb(0, 0, 0); text-wrap-mode: wrap;&quot;&gt;- id BIGSERIAL&lt;/span&gt;&lt;br style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); text-wrap-mode: wrap;&quot;&gt;&lt;span style=&quot;color: rgb(0, 0, 0); text-wrap-mode: wrap;&quot;&gt;- tenant_id UUID&lt;/span&gt;&lt;br style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); text-wrap-mode: wrap;&quot;&gt;&lt;span style=&quot;color: rgb(0, 0, 0); text-wrap-mode: wrap;&quot;&gt;- payload JSONB&lt;/span&gt;&lt;br style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); text-wrap-mode: wrap;&quot;&gt;&lt;span style=&quot;color: rgb(0, 0, 0); text-wrap-mode: wrap;&quot;&gt;- created_at TIMESTAMPTZ&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="events">
+                    <mxGeometry x="200" y="30" width="170" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="outbox" value="outbox&#xa;- id BIGSERIAL&#xa;- tenant_id UUID&#xa;- event_id TEXT&#xa;- event_type TEXT&#xa;- aggregate_id BIGINT&#xa;- payload JSONB&#xa;- created_at TIMESTAMPTZ&#xa;- published_at TIMESTAMPTZ NULL" style="shape=table;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;startSize=100;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="200" width="230" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="redis" value="Redis Streams&#xa;stream:events:{tenant}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="430" width="230" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="sse" value="SSE Clients (EventSource)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="790" y="430" width="180" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="client-backend" style="endArrow=classic;html=1;strokeWidth=2;" parent="1" source="client" target="backend" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="backend-events" style="endArrow=classic;html=1;strokeWidth=2;" parent="1" source="backend" target="events" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="backend-outbox" style="endArrow=classic;html=1;strokeWidth=2;" parent="1" source="backend" target="outbox" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="outbox-redis" style="endArrow=classic;html=1;strokeWidth=2;" parent="1" source="outbox" target="redis" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="redis-sse" style="endArrow=classic;html=1;strokeWidth=2;" parent="1" source="redis" target="sse" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="note1" value="POST /events&#xa;- insert into events + outbox (aggregateId = events.id)" style="text;html=1;whiteSpace=wrap;rounded=0;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="260" y="100" width="200" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="note2" value="OutboxWorkerService&#xa;FOR UPDATE SKIP LOCKED&#xa;→ Redis Streams XADD" style="text;html=1;whiteSpace=wrap;rounded=0;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="530" y="360" width="230" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="note3" value="SseController&#xa;XRANGE + XREAD BLOCK&#xa;→ EventSource broadcast" style="text;html=1;whiteSpace=wrap;rounded=0;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="290" width="180" height="50" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

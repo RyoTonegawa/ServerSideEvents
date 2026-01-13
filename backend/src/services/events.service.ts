@@ -34,11 +34,13 @@ export class EventsService {
       created_at: row.event?.createdAt?.toISOString() ?? new Date().toISOString(),
     }));
 
+    // descソートしているため0番目が最大
     const cursor = items.length > 0 ? String(items[0].id) : null;
     return { items, cursor };
   }
-
+  // クライアントから送られてきたLastEventIdから
   async resolveAggregateId(tenantId: string, eventId: string): Promise<number | null> {
+    // findFirstで指定した条件に一致した最初のレコードを返却
     const result = await this.prisma.withTenant(tenantId, (tx) =>
       tx.outbox.findFirst({
         where: { eventId },
@@ -49,7 +51,9 @@ export class EventsService {
   }
 
   async insertEvent(tenantId: string, payload: Record<string, unknown>, eventType = 'EventCreated') {
+    // outboxへの書き込みとeventの書き込みを同一トランザクションにて行う
     return this.prisma.withTenant(tenantId, async (tx) => {
+      // 発生した事実としてのイベントを作成
       const event = await tx.event.create({
         data: {
           tenantId,
@@ -57,6 +61,9 @@ export class EventsService {
         },
       });
       const eventId = ulid();
+
+      // eventテーブルのIDを引き継ぎ、正となるeventの情報をOutBoxテーブルに書き込み
+      // eventIDをAggregateIdとして利用
       await tx.outbox.create({
         data: {
           tenantId,
