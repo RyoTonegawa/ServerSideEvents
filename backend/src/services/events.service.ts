@@ -53,7 +53,16 @@ export class EventsService {
   async insertEvent(tenantId: string, payload: Record<string, unknown>, eventType = 'EventCreated') {
     // outboxへの書き込みとeventの書き込みを同一トランザクションにて行う
     return this.prisma.withTenant(tenantId, async (tx) => {
-      // 発生した事実としてのイベントを作成
+      /**
+       * 発生した事実としてのイベントを作成
+       * データサンプル
+       * {
+       *  id: 120n,
+       *  tenantId: '11111111-1111-1111-1111-111111111111',
+       *  payload: { message: 'Hello' },
+       *  createdAt: 2026-01-14T13:35:28.356Z
+       *　}
+       */
       const event = await tx.event.create({
         data: {
           tenantId,
@@ -61,9 +70,18 @@ export class EventsService {
         },
       });
       const eventId = ulid();
-
       // eventテーブルのIDを引き継ぎ、正となるeventの情報をOutBoxテーブルに書き込み
       // eventIDをAggregateIdとして利用
+      /**
+       * データサンプル
+       * {
+      　＊  tenantId: '11111111-1111-1111-1111-111111111111',
+      　＊  eventId: '01KEZAXJZGYMZEKHWY5DG3581Z',
+      　＊  eventType: 'EventCreated',
+      　＊  aggregateId: 120n,
+      　＊  payload: { message: 'Hello' }
+      　＊}
+       */
       await tx.outbox.create({
         data: {
           tenantId,
