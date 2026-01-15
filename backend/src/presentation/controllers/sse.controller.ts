@@ -9,8 +9,8 @@ import {
 } from '@nestjs/common';
 import { ApiHeader, ApiOperation, ApiProduces, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response, Request } from 'express';
-import { EventsService } from '../services/events.service';
-import { RedisStreamService } from '../services/redis-stream.service';
+import { EventsService } from '../../application/services/events.service';
+import { RedisStreamService } from '../../infrastructure/redis-stream.service';
 
 /**
  * ブラウザからのSSE接続を受けるためのエンドポイント
@@ -67,10 +67,11 @@ export class SseController {
     example: '11111111-1111-1111-1111-111111111111',
   })
   async stream(
-    // フロントから叩く場合とバックエンドで叩く場合両方に対応するために二つのヘッダを用意する
+    // EventSourceはヘッダをつけられないため、クエリパラメータとヘッダの二つを用意する。
     @Headers('x-tenant-id') tenantHeader: string,
     @Query('tenantId') tenantQuery: string,
-    // afterでどのイベントIDより後ろを送るかを指定。
+    // 以降どのイベントIDより後ろを送るかを指定。
+    // 特に、初期接続時はLast-Event-Idもないので最新から５０件を制御するカーソルになる。。
     // タイムスタンプで制御しようとすると同じ時刻に複数作られた場合に対応できない
     @Query('after') afterCursor: string,
     @Headers('last-event-id') lastEventId: string,
@@ -88,13 +89,13 @@ export class SseController {
     res.flushHeaders();
 
     // Redisテナント固有のキーを生成しテナント間でイベントが混じるのを防ぐ
+    // streamKeyの例
+    // stream:events:11111111-1111-1111-1111-111111111111
     const streamKey = this.redis.streamKey(tenantId);
-    console.log("--------streamKey----------")
-    console.log(streamKey)
+
     let filterAggregateId: number | null = null;
 
-    // 手動指定とブラウザが指定する値の二つがあるので、フォールバックとする。
-    // 手動で動かす時はafterが便利、ブラウザが再接続した際にカーソルをつけるためにLastEventIdを利用
+    // 初期接続時カーソルと2回目以降のイベントの制御で責務を分ける。
     const requestedCursor = afterCursor || lastEventId;
     if (requestedCursor) {
       filterAggregateId = await this.eventsService.resolveAggregateId(tenantId, requestedCursor);

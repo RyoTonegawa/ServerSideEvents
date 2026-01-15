@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Headers, HttpException, HttpStatus, Post, Query } from '@nestjs/common';
 import { ApiHeader, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { EventsService } from '../services/events.service';
+import { EventsService } from '../../application/services/events.service';
 import { GetEventsDto } from '../dto/get-events.dto';
 import { CreateEventDto } from '../dto/create-event.dto';
 

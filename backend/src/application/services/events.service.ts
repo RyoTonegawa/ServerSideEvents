@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ulid } from 'ulid';
 import { Prisma } from '@prisma/client';
-import { PrismaService } from './prisma.service';
+import { PrismaService } from '../../infrastructure/prisma.service';
 
 export type EventRecord = {
   id: number;
@@ -55,7 +55,7 @@ export class EventsService {
     return this.prisma.withTenant(tenantId, async (tx) => {
       /**
        * 発生した事実としてのイベントを作成
-       * データサンプル
+       * eventデータサンプル
        * {
        *  id: 120n,
        *  tenantId: '11111111-1111-1111-1111-111111111111',
@@ -73,7 +73,7 @@ export class EventsService {
       // eventテーブルのIDを引き継ぎ、正となるeventの情報をOutBoxテーブルに書き込み
       // eventIDをAggregateIdとして利用
       /**
-       * データサンプル
+       * outboxデータサンプル
        * {
       　＊  tenantId: '11111111-1111-1111-1111-111111111111',
       　＊  eventId: '01KEZAXJZGYMZEKHWY5DG3581Z',

@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { RedisStreamService } from './redis-stream.service';
-import { PrismaService } from './prisma.service';
+import { RedisStreamService } from '../../infrastructure/redis-stream.service';
+import { PrismaService } from '../../infrastructure/prisma.service';
 
 @Injectable()
 export class OutboxWorkerService implements OnModuleInit, OnModuleDestroy {
